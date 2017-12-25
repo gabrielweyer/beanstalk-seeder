@@ -12,11 +12,11 @@ assembly_info:
 test: off
 deploy:  
   - provider: GitHub
-  release: v$(release_version)
-  auth_token:
-    secure: <your encrypted token>
-  artifact: .\*.zip
-  draft: false
-  prerelease: false
-  on:
-    branch: master
+    release: v$(release_version)
+    auth_token:
+      secure: AmCNluoUjQddLCZrNghd0XjLwFhrofDMF7UTdmJDLuK5g/+FKGfBr6IOIbN3hrRw
+    artifact: .\*.zip
+    draft: false
+    prerelease: false
+    on:
+      branch: master
