@@ -8,6 +8,7 @@ var zipVersion = "0.0.1";
 
 var publishDir = MakeAbsolute(Directory("publish"));
 var artefactsDir = MakeAbsolute(Directory("artefacts"));
+FilePath artefactFilePath;
 
 var solutionPath = "./BeanstalkSeeder.sln";
 
@@ -71,7 +72,7 @@ Task("Build")
     DotNetCoreBuild(solutionPath, settings);
 });
 
-Task("Publish")
+Task("PublishLocal")
     .IsDependentOn("Build")
     .WithCriteria(() => HasArgument("publish"))
     .Does(() =>
@@ -87,17 +88,37 @@ Task("Publish")
 });
 
 Task("Zip")
-    .IsDependentOn("Publish")
+    .IsDependentOn("PublishLocal")
     .WithCriteria(() => HasArgument("publish"))
     .Does(() =>
 {
-    Zip(publishDir, artefactsDir.GetFilePath(new FilePath($"/beanstalk-seeder-{zipVersion}.zip")));
+    artefactFilePath = artefactsDir.GetFilePath(new FilePath($"beanstalk-seeder-{zipVersion}.zip"));
+    Zip(publishDir, artefactFilePath);
+});
+
+Task("PublishAppVeyor")
+    .IsDependentOn("Zip")
+    .WithCriteria(() => HasArgument("publish") && AppVeyor.IsRunningOnAppVeyor)
+    .Does(() =>
+{
+    CopyFileToDirectory(artefactFilePath, MakeAbsolute(Directory("./")));
+    PublishAppVeyorArtefact(artefactFilePath.GetFilename().ToString());
 });
 
 Task("Default")
-    .IsDependentOn("Zip");
+    .IsDependentOn("PublishAppVeyor");
 
 RunTarget(target);
+
+private void PublishAppVeyorArtefact(string fileName)
+{
+    StartProcess("appveyor", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder()
+            .Append("PushArtifact")
+            .AppendQuoted(fileName)
+        }
+    );
+}
 
 private void SetAppVeyorVariable(string name, string value)
 {

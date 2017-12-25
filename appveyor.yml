@@ -6,8 +6,6 @@ branches:
     - /features\/.+/
 build_script:
   - ps: .\build.ps1 -publish
-artifacts:
-  - path: .\artefacts\*.zip
 assembly_info:
   # We'll version the binaries and the zip file in the build script
   patch: false
@@ -23,7 +21,7 @@ deploy:
       # Encrypted `GitHub` `PAT`
       # https://www.appveyor.com/docs/deployment/github/#provider-settings
       secure: AmCNluoUjQddLCZrNghd0XjLwFhrofDMF7UTdmJDLuK5g/+FKGfBr6IOIbN3hrRw
-    artifact: .\*.zip
+    artifact: /.\*.zip/
     draft: false
     prerelease: false
     on:
