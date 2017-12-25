@@ -12,6 +12,7 @@ namespace BeanstalkSeeder.Configuration
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Is(serilogLevel)
+                .Enrich.WithDemystifiedStackTraces()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(serilogLevel);
 

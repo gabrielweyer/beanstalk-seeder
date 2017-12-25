@@ -67,7 +67,7 @@ namespace BeanstalkSeeder.Services
                 }
                 catch (HttpRequestException ex)
                 {
-                    _logger.LogError(new EventId(1), ex, "Errror when calling the worker");
+                    _logger.LogError(new EventId(1), ex, "Error when calling the worker");
                 }
                 catch (Exception ex)
                 {
