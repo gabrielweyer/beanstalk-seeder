@@ -11,3 +11,5 @@ obj/
 
 tools/
 !tools/packages.config
+artefacts/
+publish/

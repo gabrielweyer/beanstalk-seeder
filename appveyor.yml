@@ -1,0 +1,22 @@
+branches:  
+  only:
+    - master
+    - /feature\/.+/
+shallow_clone: true 
+build_script:  
+  - ps: .\build.ps1 -publish
+artifacts:  
+  - path: .\artefacts\*.zip
+assembly_info:
+  patch: false
+test: off
+deploy:  
+  - provider: GitHub
+  release: v$(release_version)
+  auth_token:
+    secure: <your encrypted token>
+  artifact: .\*.zip
+  draft: false
+  prerelease: false
+  on:
+    branch: master
