@@ -116,6 +116,8 @@ private void PublishAppVeyorArtefact(string fileName)
         Arguments = new ProcessArgumentBuilder()
             .Append("PushArtifact")
             .AppendQuoted(fileName)
+            .Append("-DeploymentName")
+            .AppendQuoted("archive")
         }
     );
 }

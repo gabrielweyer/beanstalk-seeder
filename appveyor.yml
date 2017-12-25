@@ -11,6 +11,9 @@ assembly_info:
   patch: false
 # We'll run the tests in the build script
 test: off
+# AppVeyor will create a release tag if a matching one does not exist
+# hence triggering another build
+skip_tags: true
 deploy:
   # The provider is case sensitive
   - provider: GitHub
@@ -21,7 +24,7 @@ deploy:
       # Encrypted `GitHub` `PAT`
       # https://www.appveyor.com/docs/deployment/github/#provider-settings
       secure: AmCNluoUjQddLCZrNghd0XjLwFhrofDMF7UTdmJDLuK5g/+FKGfBr6IOIbN3hrRw
-    artifact: /.\*.zip/
+    artifact: archive
     draft: false
     prerelease: false
     on:
