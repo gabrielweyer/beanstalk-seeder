@@ -25,4 +25,4 @@ environment:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 install:
   - ps: .\tools\dotnet-install.ps1 -SharedRuntime -Version 1.0.8
-    ps: .\tools\dotnet-install.ps1 -Channel Current
+  - ps: .\tools\dotnet-install.ps1 -Channel Current
