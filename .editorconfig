@@ -1,0 +1,21 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# Don't use tabs for indentation
+[*]
+indent_style = space
+# (Please don't specify an indent_size here; that has too many unintended consequences.)
+
+# Code files
+[*.{cs}]
+indent_size = 4
+
+# Xml project files
+[*.{csproj}]
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_size = 4
