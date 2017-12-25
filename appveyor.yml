@@ -3,7 +3,6 @@ branches:
   only:
     - master
     - /feature\/.+/
-shallow_clone: true
 build_script:
   - ps: .\build.ps1 -publish
 artifacts:
