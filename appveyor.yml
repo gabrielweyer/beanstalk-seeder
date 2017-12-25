@@ -21,3 +21,7 @@ deploy:
     prerelease: false
     on:
       branch: master
+environment:  
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+install:
+  - ps: .\tools\dotnet-install.ps1 -SharedRuntime -Version 1.1.5
