@@ -1,16 +1,17 @@
-branches:  
+image: Visual Studio 2017
+branches:
   only:
     - master
     - /feature\/.+/
-shallow_clone: true 
-build_script:  
+shallow_clone: true
+build_script:
   - ps: .\build.ps1 -publish
-artifacts:  
+artifacts:
   - path: .\artefacts\*.zip
 assembly_info:
   patch: false
 test: off
-deploy:  
+deploy:
   - provider: GitHub
     release: v$(release_version)
     auth_token:
