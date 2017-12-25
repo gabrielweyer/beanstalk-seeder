@@ -9,5 +9,8 @@ obj/
 
 # Cake
 
-tools/
+tools/*
 !tools/packages.config
+!tools/dotnet-install.ps1
+artefacts/
+publish/

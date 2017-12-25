@@ -10,10 +10,16 @@ namespace BeanstalkSeeder.Configuration
         {
             IServiceCollection services = new ServiceCollection();
 
-            var configuration = new ConfigurationBuilder()
+            var configurationBuilder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
-                .AddEnvironmentVariables()
-                .Build();
+                .AddEnvironmentVariables();
+
+            if (IsDevelopment())
+            {
+                configurationBuilder.AddUserSecrets<Program>();
+            }
+
+            var configuration = configurationBuilder.Build();
             
             var loggerFactory = configuration.ConfigureSerilog();
 
@@ -23,6 +29,13 @@ namespace BeanstalkSeeder.Configuration
             services.AddLogic();
             
             return services.BuildServiceProvider();
+        }
+
+        private static bool IsDevelopment()
+        {
+            var environment = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
+            var isDevelopment = "Development".Equals(environment);
+            return isDevelopment;
         }
     }
 }
