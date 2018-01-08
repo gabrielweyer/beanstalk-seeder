@@ -1,4 +1,7 @@
-﻿using Amazon;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
 using BeanstalkSeeder.Options;
@@ -11,11 +14,29 @@ namespace BeanstalkSeeder.Configuration
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddLogic(this IServiceCollection services)
+        public static IEnumerable<IDisposable> AddLogic(this IServiceCollection services, IConfigurationRoot configuration)
         {
             services.AddSingleton<MessagePump>();
             services.AddSingleton<QueueReader>();
             services.AddSingleton<WorkerInvoker>();
+
+            var workerOptions = configuration.GetSection("Worker").Get<WorkerOptions>();
+
+            var sp = ServicePointManager.FindServicePoint(workerOptions.Endpoint);
+            sp.ConnectionLeaseTimeout = 60*1000;
+
+            var httpClient = new WorkerHttpClient
+            {
+                BaseAddress = workerOptions.Endpoint,
+            };
+
+            services.AddSingleton<IHttpClient>(httpClient);
+            services.AddSingleton<IDelayer>(new Delayer());
+
+            return new List<IDisposable>
+            {
+                httpClient
+            };
         }
 
         public static void AddAws(this IServiceCollection services, IConfigurationRoot configuration)
@@ -38,7 +59,6 @@ namespace BeanstalkSeeder.Configuration
         {
             services.AddSingleton<IConfiguration>(configuration);
             services.AddOptions();
-            services.Configure<WorkerOptions>(configuration.GetSection("Worker"));
             services.Configure<QueueOptions>(configuration.GetSection("Aws:Queue"));
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using BeanstalkSeeder.Configuration;
 using BeanstalkSeeder.Services;
@@ -18,9 +19,8 @@ namespace BeanstalkSeeder
 
             try
             {
-                var provider = ServiceProviderConfigurator.ConfigureTheWorld();
-                
-                using (var applicationScope = provider.CreateScope())
+                using (var providerConfigurator = new ServiceProviderConfigurator())
+                using (var applicationScope = providerConfigurator.ConfigureTheWorld().CreateScope())
                 {
                     var messagePump = applicationScope
                         .ServiceProvider
@@ -31,7 +31,10 @@ namespace BeanstalkSeeder
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception: {0} - Message: {1}", e.GetType(), e.Message);
+                Console.WriteLine("Exception: {0}", e.GetType());
+                Console.WriteLine("Message: {0}", e.Message);
+                Console.WriteLine("StackTrace:");
+                Console.WriteLine(e.Demystify().StackTrace);
             }
             finally
             {

@@ -10,14 +10,16 @@ namespace BeanstalkSeeder.Services
     {
         private readonly WorkerInvoker _workerInvoker;
         private readonly QueueReader _queueReader;
+        private readonly IDelayer _delayer;
         private readonly ILogger<MessagePump> _logger;
 
         private const int DefaultBackoffMilliseconds = 500;
 
-        public MessagePump(WorkerInvoker workerInvoker, QueueReader queueReader, ILogger<MessagePump> logger)
+        public MessagePump(WorkerInvoker workerInvoker, QueueReader queueReader, IDelayer delayer, ILogger<MessagePump> logger)
         {
             _workerInvoker = workerInvoker;
             _queueReader = queueReader;
+            _delayer = delayer;
             _logger = logger;
         }
 
@@ -44,8 +46,8 @@ namespace BeanstalkSeeder.Services
                     if (message == null)
                     {
                         _logger.LogInformation("There is no available message in the queue, sleeping for {BackoffMilliseconds} ms", backoffMillisecond);
-                        
-                        await Task.Delay(backoffMillisecond, token);
+
+                        await _delayer.DelayAsync(backoffMillisecond, token);
                         
                         if (backoffMillisecond < 5000)
                         {

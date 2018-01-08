@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BeanstalkSeeder.Configuration
 {
-    public static class ServiceProviderConfigurator
+    public class ServiceProviderConfigurator : IDisposable
     {
-        public static IServiceProvider ConfigureTheWorld()
+        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+
+        public IServiceProvider ConfigureTheWorld()
         {
             IServiceCollection services = new ServiceCollection();
 
@@ -26,7 +29,7 @@ namespace BeanstalkSeeder.Configuration
             services.AddOptions(configuration);
             services.AddLogging(loggerFactory);
             services.AddAws(configuration);
-            services.AddLogic();
+            _disposables.AddRange(services.AddLogic(configuration));
             
             return services.BuildServiceProvider();
         }
@@ -36,6 +39,21 @@ namespace BeanstalkSeeder.Configuration
             var environment = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
             var isDevelopment = "Development".Equals(environment);
             return isDevelopment;
+        }
+
+        public void Dispose()
+        {
+            foreach (var disposable in _disposables)
+            {
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch (Exception)
+                {
+                    // There is not much we can do at this stage
+                }
+            }
         }
     }
 }
