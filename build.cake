@@ -8,72 +8,95 @@ var zipVersion = "0.0.1";
 
 var publishDir = MakeAbsolute(Directory("publish"));
 var artefactsDir = MakeAbsolute(Directory("artefacts"));
+var testsResultsDir = artefactsDir.Combine("test-results");
 FilePath artefactFilePath;
 
 var solutionPath = "./BeanstalkSeeder.sln";
 
 Task("Clean")
     .Does(() =>
-{
-    CleanDirectory(publishDir);
-    CleanDirectory(artefactsDir);
-
-    var settings = new DotNetCoreCleanSettings
     {
-        Configuration = configuration
-    };
+        CleanDirectory(publishDir);
+        CleanDirectory(artefactsDir);
 
-    DotNetCoreClean(solutionPath, settings);
-});
+        var settings = new DotNetCoreCleanSettings
+        {
+            Configuration = configuration
+        };
+
+        DotNetCoreClean(solutionPath, settings);
+    });
 
 Task("Restore")
     .IsDependentOn("Clean")
     .Does(() =>
-{
-    DotNetCoreRestore();
-});
+    {
+        DotNetCoreRestore();
+    });
 
 Task("SemVer")
     .IsDependentOn("Restore")
     .Does(() =>
-{
-    var gitVersion = GitVersion();
-    assemblyVersion = gitVersion.AssemblySemVer;
-    zipVersion = gitVersion.NuGetVersion;
+    {
+        var gitVersion = GitVersion();
+        assemblyVersion = gitVersion.AssemblySemVer;
+        zipVersion = gitVersion.NuGetVersion;
 
-    Information($"AssemblySemVer: {assemblyVersion}");
-    Information($"Zip version: {zipVersion}");
-});
+        Information($"AssemblySemVer: {assemblyVersion}");
+        Information($"Zip version: {zipVersion}");
+    });
 
 Task("SetAppVeyorVersion")
     .IsDependentOn("Semver")
     .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
     .Does(() =>
-{
-    SetAppVeyorVariable("RELEASE_VERSION", zipVersion);
-});
+    {
+        AppVeyor.UpdateBuildVersion(zipVersion);
+    });
 
 Task("Build")
     .IsDependentOn("SetAppVeyorVersion")
     .Does(() =>
-{
-    var settings = new DotNetCoreBuildSettings
     {
-        Configuration = configuration,
-        NoIncremental = true,
-        MSBuildSettings = new DotNetCoreMSBuildSettings()
-            .SetVersion(assemblyVersion)
-            .WithProperty("FileVersion", zipVersion)
-            .WithProperty("InformationalVersion", zipVersion)
-            .WithProperty("nowarn", "7035"),
-        ArgumentCustomization = args => args.Append("--no-restore")
-    };
+        var settings = new DotNetCoreBuildSettings
+        {
+            Configuration = configuration,
+            NoIncremental = true,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .SetVersion(assemblyVersion)
+                .WithProperty("FileVersion", zipVersion)
+                .WithProperty("InformationalVersion", zipVersion)
+                .WithProperty("nowarn", "7035"),
+            ArgumentCustomization = args => args.Append("--no-restore")
+        };
 
-    DotNetCoreBuild(solutionPath, settings);
-});
+        DotNetCoreBuild(solutionPath, settings);
+    });
+
+Task("Test")
+    .IsDependentOn("Build")
+    .Does(() =>
+    {
+        var settings = new DotNetCoreToolSettings();
+
+        var argumentsBuilder = new ProcessArgumentBuilder()
+            .Append("-configuration")
+            .Append(configuration)
+            .Append("-nobuild");
+
+        var projectFiles = GetFiles("./tests/*/*Tests.csproj");
+
+        foreach (var projectFile in projectFiles)
+        {
+            var testResultsFile = testsResultsDir.Combine($"{projectFile.GetFilenameWithoutExtension()}.xml");
+            var arguments = $"{argumentsBuilder.Render()} -xml \"{testResultsFile}\"";
+
+            DotNetCoreTool(projectFile, "xunit", arguments, settings);
+        }
+    });
 
 Task("PublishLocal")
-    .IsDependentOn("Build")
+    .IsDependentOn("Test")
     .WithCriteria(() => HasArgument("publish"))
     .Does(() =>
 {
@@ -102,35 +125,13 @@ Task("PublishAppVeyor")
     .Does(() =>
 {
     CopyFileToDirectory(artefactFilePath, MakeAbsolute(Directory("./")));
-    PublishAppVeyorArtefact(artefactFilePath.GetFilename().ToString());
+
+    GetFiles($"./*.zip")
+            .ToList()
+            .ForEach(f => AppVeyor.UploadArtifact(f, new AppVeyorUploadArtifactsSettings { DeploymentName = "archive" }));
 });
 
 Task("Default")
     .IsDependentOn("PublishAppVeyor");
 
 RunTarget(target);
-
-private void PublishAppVeyorArtefact(string fileName)
-{
-    StartProcess("appveyor", new ProcessSettings {
-        Arguments = new ProcessArgumentBuilder()
-            .Append("PushArtifact")
-            .AppendQuoted(fileName)
-            .Append("-DeploymentName")
-            .AppendQuoted("archive")
-        }
-    );
-}
-
-private void SetAppVeyorVariable(string name, string value)
-{
-    StartProcess("appveyor", new ProcessSettings {
-        Arguments = new ProcessArgumentBuilder()
-            .Append("SetVariable")
-            .Append("-Name")
-            .AppendQuoted(name)
-            .Append("-Value")
-            .AppendQuoted(value)
-        }
-    );
-}

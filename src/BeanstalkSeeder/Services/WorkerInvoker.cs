@@ -5,37 +5,26 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BeanstalkSeeder.Models;
-using BeanstalkSeeder.Options;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace BeanstalkSeeder.Services
 {
-    public class WorkerInvoker : IDisposable
+    public class WorkerInvoker
     {
-        private readonly WorkerOptions _options;
+        private readonly IHttpClient _httpClient;
         private readonly ILogger<WorkerInvoker> _logger;
 
-        private readonly HttpClient _httpClient;
+        public Uri Endpoint => _httpClient.BaseAddress;
 
-        public Uri Endpoint => _options.Endpoint;
-
-        public WorkerInvoker(IOptions<WorkerOptions> options, ILogger<WorkerInvoker> logger)
+        public WorkerInvoker(IHttpClient httpClient, ILogger<WorkerInvoker> logger)
         {
-            _options = options.Value;
             _logger = logger;
-
-            _httpClient = new HttpClient
-            {
-                BaseAddress = _options.Endpoint,
-            };
+            _httpClient = httpClient;
         }
 
         public async Task InvokeAsync(WorkerMessage message, CancellationToken token)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
-
-            _logger.LogInformation("Calling worker");
 
             var request = new HttpRequestMessage
             {
@@ -57,11 +46,6 @@ namespace BeanstalkSeeder.Services
             response.EnsureSuccessStatusCode();
             
             _logger.LogInformation("Worker call was successful");
-        }
-
-        public void Dispose()
-        {
-            _httpClient?.Dispose();
         }
     }
 }
