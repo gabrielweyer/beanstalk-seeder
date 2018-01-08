@@ -22,9 +22,8 @@ skip_commits:
 deploy:
   # The provider is case sensitive
   - provider: GitHub
-    # The `release_version` variable is set in the `SetAppVeyorVersion` `Task` of the build script
     # By convention release versions start with `v`
-    release: v$(release_version)
+    release: v$(APPVEYOR_BUILD_VERSION)
     auth_token:
       # Encrypted `GitHub` `PAT`
       # https://www.appveyor.com/docs/deployment/github/#provider-settings
