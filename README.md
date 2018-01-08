@@ -1,5 +1,9 @@
 # Beanstalk Seeder
 
+| CI | Status | Platform(s) | Framework(s) | Test Framework(s) |
+| --- | --- | --- | --- | --- |
+| [AppVeyor][app-veyor] | [![Build Status][app-veyor-shield]][app-veyor] | `Windows` | `nestandard2.0` | `netcoreapp2.0.4` |
+
 Emulates the `SQS Daemon` surrounding an [`Elastic Beanstalk Worker Tier`][worker-tier] so that you can replicate the interaction between a `Web Tier` and a `Worker Tier` on your machine.
 
 The goal of `Beanstalk Seeder` is to allow you to go through an end-to-end flow, not to replicate the feature set of the `SQS Daemon`.
@@ -23,8 +27,10 @@ Create a `iAM` user (if you don't have one already) which has access to `SQS`. T
 
 ## AppVeyor
 
-The `AppVeyor` [script][app-veyor] should contain enough comments to explain how the build works in `AppVeyor`. This is the entire configuration, I didn't need to configure anything in the UI.
+The `AppVeyor` [script][app-veyor-yml] should contain enough comments to explain how the build works in `AppVeyor`. This is the entire configuration, I didn't need to configure anything in the UI.
 
 [worker-tier]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features-managing-env-tiers.html
 [available-regions]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
-[app-veyor]: appveyor.yml
+[app-veyor-yml]: appveyor.yml
+[app-veyor]: https://ci.appveyor.com/project/GabrielWeyer/beanstalk-seeder
+[app-veyor-shield]: https://ci.appveyor.com/api/projects/status/github/gabrielweyer/beanstalk-seeder?branch=master&svg=true
