@@ -108,6 +108,8 @@ Task("PublishLocal")
     };
 
     DotNetCorePublish("./src/BeanstalkSeeder/BeanstalkSeeder.csproj", settings);
+
+    CopyFileToDirectory("README.md", publishDir);
 });
 
 Task("Zip")
