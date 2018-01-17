@@ -35,7 +35,7 @@ namespace BeanstalkSeeder.Services
             message.Headers.Keys.ToList()
                 .ForEach(k => request.Headers.Add($"X-Aws-Sqsd-Attr-{k}", message.Headers[k]));
 
-            _logger.LogInformation("Calling worker with payload {JsonPayload} and headers {BeanstalkHeaders}",
+            _logger.LogInformation("POSTing to worker with body {JsonBody} and headers {BeanstalkHeaders}",
                 message.JsonPayload,
                 request.Headers
                     .Where(h => h.Key.StartsWith("X-Aws-Sqsd-Attr-"))
@@ -44,7 +44,7 @@ namespace BeanstalkSeeder.Services
             var response = await _httpClient.SendAsync(request, token);
 
             response.EnsureSuccessStatusCode();
-            
+
             _logger.LogInformation("Worker call was successful");
         }
     }
