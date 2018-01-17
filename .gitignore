@@ -11,6 +11,8 @@ obj/
 
 tools/*
 !tools/packages.config
-!tools/dotnet-install.ps1
+
+# Build
+
 artefacts/
 publish/
