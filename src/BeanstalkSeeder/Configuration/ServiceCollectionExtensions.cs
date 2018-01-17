@@ -14,7 +14,8 @@ namespace BeanstalkSeeder.Configuration
 {
     public static class ServiceCollectionExtensions
     {
-        public static IEnumerable<IDisposable> AddLogic(this IServiceCollection services, IConfigurationRoot configuration)
+        public static IEnumerable<IDisposable> AddLogic(this IServiceCollection services,
+            IConfigurationRoot configuration)
         {
             services.AddSingleton<MessagePump>();
             services.AddSingleton<QueueReader>();
@@ -22,8 +23,16 @@ namespace BeanstalkSeeder.Configuration
 
             var workerOptions = configuration.GetSection("Worker").Get<WorkerOptions>();
 
+            if (!workerOptions.Endpoint.IsAbsoluteUri)
+            {
+                throw new ArgumentOutOfRangeException(
+                    "Worker:Endpoint",
+                    workerOptions.Endpoint.OriginalString,
+                    "The Worker Endpoint is not a valid URI");
+            }
+
             var sp = ServicePointManager.FindServicePoint(workerOptions.Endpoint);
-            sp.ConnectionLeaseTimeout = 60*1000;
+            sp.ConnectionLeaseTimeout = 60 * 1000;
 
             var httpClient = new WorkerHttpClient
             {
