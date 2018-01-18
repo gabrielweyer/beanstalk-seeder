@@ -62,12 +62,12 @@ Task("Build")
         {
             Configuration = configuration,
             NoIncremental = true,
+            NoRestore = true,
             MSBuildSettings = new DotNetCoreMSBuildSettings()
                 .SetVersion(assemblyVersion)
                 .WithProperty("FileVersion", zipVersion)
                 .WithProperty("InformationalVersion", zipVersion)
-                .WithProperty("nowarn", "7035"),
-            ArgumentCustomization = args => args.Append("--no-restore")
+                .WithProperty("nowarn", "7035")
         };
 
         DotNetCoreBuild(solutionPath, settings);
@@ -104,7 +104,7 @@ Task("PublishLocal")
     {
         Configuration = configuration,
         OutputDirectory = publishDir,
-        ArgumentCustomization = args => args.Append("--no-restore", "--no-build")
+        NoRestore = true
     };
 
     DotNetCorePublish("./src/BeanstalkSeeder/BeanstalkSeeder.csproj", settings);
