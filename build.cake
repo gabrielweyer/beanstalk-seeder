@@ -100,16 +100,18 @@ Task("PublishLocal")
     .WithCriteria(() => HasArgument("publish"))
     .Does(() =>
 {
-    var settings = new DotNetCorePublishSettings
-    {
-        Configuration = configuration,
-        OutputDirectory = publishDir,
-        NoRestore = true
-    };
+    var publishPath = publishDir.FullPath + '/';
 
-    DotNetCorePublish("./src/BeanstalkSeeder/BeanstalkSeeder.csproj", settings);
+    var settings = new DotNetCoreMSBuildSettings()
+        .HideLogo()
+        .SetMaxCpuCount(-1)
+        .WithTarget("PublishWithoutBuilding")
+        .SetConfiguration(configuration)
+        .WithProperty("PublishDir", publishPath);
 
-    CopyFileToDirectory("README.md", publishDir);
+    DotNetCoreMSBuild("./src/BeanstalkSeeder/BeanstalkSeeder.csproj", settings);
+
+    Information($"Published to '{publishPath}'");
 });
 
 Task("Zip")
@@ -119,6 +121,8 @@ Task("Zip")
 {
     artefactFilePath = artefactsDir.GetFilePath(new FilePath($"beanstalk-seeder-{zipVersion}.zip"));
     Zip(publishDir, artefactFilePath);
+
+    Information($"Zipped content of directory '{publishDir}' to archive '{artefactFilePath}'");
 });
 
 Task("PublishAppVeyor")
