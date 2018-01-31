@@ -14,10 +14,9 @@ The goal of `Beanstalk Seeder` is to allow you to go through an end-to-end flow,
 
 ## Configuration
 
-You'll need to configure those three settings, either in `appsettings.json` or via environment variables:
+You'll need to configure those two settings, either in `appsettings.json` or via environment variables:
 
 - `Worker:Endpoint` - accessible `URI`, for example `http://localhost:9999`
-- `Aws:RegionSystemName` - [region code][available-regions], for example `ap-southeast-2`
 - `Aws:Queue:WorkerQueueUrl` - `URL` of the `SQS` queue, for example `https://sqs.ap-southeast-2.amazonaws.com/375985941080/dev-gabriel`
 
 Create a `iAM` user (if you don't have one already) which has access to `SQS`. Then create two environment variables:
