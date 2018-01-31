@@ -50,10 +50,10 @@ namespace BeanstalkSeeder.Configuration
 
         public static void AddAws(this IServiceCollection services, IConfigurationRoot configuration)
         {
-            var regionSystemName = configuration.GetValue<string>("Aws:RegionSystemName");
+            var regionSystemName = configuration.GetValue<string>("Aws:Queue:WorkerQueueUrl");
 
             var sqsClient = new AmazonSQSClient(new EnvironmentVariablesAWSCredentials(),
-                RegionEndpoint.GetBySystemName(regionSystemName));
+                GetRegionEndpoint(regionSystemName));
 
             services.AddSingleton<IAmazonSQS>(sqsClient);
         }
@@ -69,6 +69,43 @@ namespace BeanstalkSeeder.Configuration
             services.AddSingleton<IConfiguration>(configuration);
             services.AddOptions();
             services.Configure<QueueOptions>(configuration.GetSection("Aws:Queue"));
+        }
+
+        /// <summary>
+        /// Based on https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+        /// </summary>
+        /// <param name="queueUrl"></param>
+        /// <returns></returns>
+        public static RegionEndpoint GetRegionEndpoint(string queueUrl)
+        {
+            var firstDotIndex = 0;
+            var secondDotIndex = 0;
+            var foundFirstDotIndex = false;
+
+            for (var i = 0; i < queueUrl.Length; i++)
+            {
+                if (queueUrl[i] != '.') continue;
+
+                if (foundFirstDotIndex)
+                {
+                    secondDotIndex = i;
+                    break;
+                }
+
+                firstDotIndex = i;
+                foundFirstDotIndex = true;
+            }
+
+            if (secondDotIndex == 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(queueUrl),
+                    queueUrl,
+                    "Should contain the region system name as a sub-domain.");
+            }
+
+            var regionSystemName = queueUrl.Substring(++firstDotIndex, secondDotIndex - firstDotIndex);
+            return RegionEndpoint.GetBySystemName(regionSystemName);
         }
     }
 }
