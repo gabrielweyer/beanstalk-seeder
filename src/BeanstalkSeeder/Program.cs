@@ -1,32 +1,58 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using BeanstalkSeeder.Configuration;
+using BeanstalkSeeder.Options;
 using BeanstalkSeeder.Services;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BeanstalkSeeder
 {
     class Program
     {
+        [Uri]
+        [Required]
+        [Option(ShortName = "w", LongName = "worker", Description = "Accessible URI of the Beanstalk Worker")]
+        public Uri WorkerUri { get; }
+
+        [Uri]
+        [Required]
+        [Option(ShortName = "q", LongName = "queue", Description = "URI of the SQS queue")]
+        public Uri WorkerQueueUri { get; }
+
         private static readonly CancellationTokenSource Cts = new CancellationTokenSource();
         private static readonly CancellationToken Token = Cts.Token;
 
-        static void Main(string[] args)
+        static Task<int> Main(string[] args) => CommandLineApplication.ExecuteAsync<Program>(args);
+
+        private async Task OnExecuteAsync()
         {
+            var awsOptions = new AwsOptions
+            {
+                AccessKey = Prompt.GetPassword("AWS Access Key", ConsoleColor.White, ConsoleColor.DarkBlue),
+                SecretKey = Prompt.GetPassword("AWS Secret Key", ConsoleColor.White, ConsoleColor.DarkBlue)
+            };
+
+            var queueOptions = new QueueOptions {WorkerQueueUrl = WorkerQueueUri};
+            var workerOptions = new WorkerOptions {Endpoint = WorkerUri};
+
             Console.Clear();
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
 
             try
             {
                 using (var providerConfigurator = new ServiceProviderConfigurator())
-                using (var applicationScope = providerConfigurator.ConfigureTheWorld().CreateScope())
+                using (var applicationScope = providerConfigurator
+                    .ConfigureTheWorld(awsOptions, queueOptions, workerOptions).CreateScope())
                 {
                     var messagePump = applicationScope
                         .ServiceProvider
                         .GetRequiredService<MessagePump>();
 
-                    messagePump.RunAsync(Token).Wait();
+                    await messagePump.RunAsync(Token);
                 }
             }
             catch (Exception e)

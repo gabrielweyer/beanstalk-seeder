@@ -14,22 +14,11 @@ namespace BeanstalkSeeder.Configuration
 {
     public static class ServiceCollectionExtensions
     {
-        public static IEnumerable<IDisposable> AddLogic(this IServiceCollection services,
-            IConfigurationRoot configuration)
+        public static IEnumerable<IDisposable> AddLogic(this IServiceCollection services, WorkerOptions workerOptions)
         {
             services.AddSingleton<MessagePump>();
             services.AddSingleton<QueueReader>();
             services.AddSingleton<WorkerInvoker>();
-
-            var workerOptions = configuration.GetSection("Worker").Get<WorkerOptions>();
-
-            if (!workerOptions.Endpoint.IsAbsoluteUri)
-            {
-                throw new ArgumentOutOfRangeException(
-                    "Worker:Endpoint",
-                    workerOptions.Endpoint.OriginalString,
-                    "The Worker Endpoint is not a valid URI");
-            }
 
             var sp = ServicePointManager.FindServicePoint(workerOptions.Endpoint);
             sp.ConnectionLeaseTimeout = 60 * 1000;
@@ -48,12 +37,12 @@ namespace BeanstalkSeeder.Configuration
             };
         }
 
-        public static void AddAws(this IServiceCollection services, IConfigurationRoot configuration)
+        public static void AddAws(this IServiceCollection services, AwsOptions awsOptions, QueueOptions queueOptions)
         {
-            var regionSystemName = configuration.GetValue<string>("Aws:Queue:WorkerQueueUrl");
+            var awsCredentials = new BasicAWSCredentials(awsOptions.AccessKey, awsOptions.SecretKey);
+            var regionEndpoint = GetRegionEndpoint(queueOptions.WorkerQueueUrl.ToString());
 
-            var sqsClient = new AmazonSQSClient(new EnvironmentVariablesAWSCredentials(),
-                GetRegionEndpoint(regionSystemName));
+            var sqsClient = new AmazonSQSClient(awsCredentials, regionEndpoint);
 
             services.AddSingleton<IAmazonSQS>(sqsClient);
         }
@@ -64,11 +53,11 @@ namespace BeanstalkSeeder.Configuration
             services.AddLogging();
         }
 
-        public static void AddOptions(this IServiceCollection services, IConfigurationRoot configuration)
+        public static void AddOptions(this IServiceCollection services, IConfigurationRoot configuration, QueueOptions queueOptions)
         {
             services.AddSingleton<IConfiguration>(configuration);
             services.AddOptions();
-            services.Configure<QueueOptions>(configuration.GetSection("Aws:Queue"));
+            services.Configure<QueueOptions>(options => options.WorkerQueueUrl = queueOptions.WorkerQueueUrl);
         }
 
         /// <summary>
