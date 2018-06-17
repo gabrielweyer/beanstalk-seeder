@@ -287,7 +287,7 @@ function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [
     Say-Invocation $MyInvocation
 
     if ($SharedRuntime) {
-        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/dotnet-win-$CLIArchitecture.$SpecificVersion.zip"
+        $PayloadURL = "https://download.microsoft.com/download/A/1/D/A1D5F1B5-A7B0-432B-A354-FCDC4B059149/dotnet-win-$CLIArchitecture.$SpecificVersion.zip"
     }
     else {
         $PayloadURL = "$AzureFeed/Sdk/$SpecificVersion/dotnet-dev-win-$CLIArchitecture.$SpecificVersion.zip"
