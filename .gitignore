@@ -14,5 +14,4 @@ tools/*
 
 # Build
 
-artefacts/
-publish/
+artifacts/

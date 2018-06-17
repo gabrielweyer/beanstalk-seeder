@@ -2,7 +2,7 @@
 
 | CI | Status | Platform(s) | Framework(s) | Test Framework(s) |
 | --- | --- | --- | --- | --- |
-| [AppVeyor][app-veyor] | [![Build Status][app-veyor-shield]][app-veyor] | `Windows` | `nestandard2.0` | `netcoreapp2.0.5` |
+| [AppVeyor][app-veyor] | [![Build Status][app-veyor-shield]][app-veyor] | `Windows` | `netcoreapp2.1` | `netcoreapp2.1` |
 
 Emulates the `SQS Daemon` surrounding an [`Elastic Beanstalk Worker Tier`][worker-tier] so that you can replicate the interaction between a `Web Tier` and a `Worker Tier` on your machine.
 
@@ -26,7 +26,7 @@ Create a `iAM` user (if you don't have one already) which has access to `SQS`. T
 
 ## Run
 
-1. If you don't have the [.NET Core Runtime v2.0.5][dotnet-runtime], you'll need to dowload it and install it
+1. If you don't have the [.NET Core Runtime v2.1.300][dotnet-runtime], you'll need to dowload it and install it
 1. Download the binaries from the [releases][releases]
 1. In the directory where you extracted the archive:
 
@@ -44,4 +44,4 @@ The `AppVeyor` [script][app-veyor-yml] should contain enough comments to explain
 [app-veyor]: https://ci.appveyor.com/project/GabrielWeyer/beanstalk-seeder
 [app-veyor-shield]: https://ci.appveyor.com/api/projects/status/github/gabrielweyer/beanstalk-seeder?branch=master&svg=true
 [releases]: https://github.com/gabrielweyer/beanstalk-seeder/releases
-[dotnet-runtime]: https://www.microsoft.com/net/download/thank-you/dotnet-runtime-2.0.5-windows-x64-installer
+[dotnet-runtime]: https://www.microsoft.com/net/download/windows

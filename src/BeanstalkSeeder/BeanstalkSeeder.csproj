@@ -1,43 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <PackageId>dotnet-seed-beanstalk</PackageId>
+    <Authors>Gabriel Weyer</Authors>
+    <PackageDescription>Emulates the SQS Daemon surrounding an Elastic Beanstalk Worker Tier so that you can replicate the interaction between a Web Tier and a Worker Tier on your machine.</PackageDescription>
+    <PackageTags>AWS;Elastic Beanstalk</PackageTags>
+    <PackageProjectUrl>https://github.com/gabrielweyer/beanstalk-seeder</PackageProjectUrl>
+    <Copyright>Copyright © Decode JWT contributors</Copyright>
     <UserSecretsId>69a0e9e0-343f-4aef-a11c-20fbbfcf791b</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="../../README.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.0" />
-    <DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
-    <PackageReference Include="Serilog" Version="2.6.0" />
-    <PackageReference Include="Serilog.Enrichers.Demystify" Version="0.1.0-dev-00011" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.0" />
+    <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="Serilog.Enrichers.Demystify" Version="0.1.0-dev-00016" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
   </ItemGroup>
-  <!-- Workaround for https://github.com/dotnet/cli/issues/5331 -->
-  <Target Name="PublishWithoutBuilding"
-          DependsOnTargets="PreventProjectReferencesFromBuilding;
-                            ResolveReferences;
-                            ComputeAndCopyFilesToPublishDirectory;
-                            GeneratePublishDependencyFile;
-                            GeneratePublishRuntimeConfigurationFile" />
-
-  <Target Name="PreventProjectReferencesFromBuilding">
-    <PropertyGroup>
-      <BuildProjectReferences>false</BuildProjectReferences>
-    </PropertyGroup>
-  </Target>
 </Project>
