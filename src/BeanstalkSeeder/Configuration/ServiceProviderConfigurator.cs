@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BeanstalkSeeder.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,7 @@ namespace BeanstalkSeeder.Configuration
     {
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
-        public IServiceProvider ConfigureTheWorld()
+        public IServiceProvider ConfigureTheWorld(AwsOptions awsOptions, QueueOptions queueOptions, WorkerOptions workerOptions)
         {
             IServiceCollection services = new ServiceCollection();
 
@@ -23,14 +24,14 @@ namespace BeanstalkSeeder.Configuration
             }
 
             var configuration = configurationBuilder.Build();
-            
+
             var loggerFactory = configuration.ConfigureSerilog();
 
-            services.AddOptions(configuration);
+            services.AddOptions(configuration, queueOptions);
             services.AddLogging(loggerFactory);
-            services.AddAws(configuration);
-            _disposables.AddRange(services.AddLogic(configuration));
-            
+            services.AddAws(awsOptions, queueOptions);
+            _disposables.AddRange(services.AddLogic(workerOptions));
+
             return services.BuildServiceProvider();
         }
 

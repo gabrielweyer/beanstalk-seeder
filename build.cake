@@ -1,23 +1,18 @@
-#tool "nuget:?package=GitVersion.CommandLine&version=3.6.5"
-
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 
 var assemblyVersion = "0.0.1";
-var zipVersion = "0.0.1";
+var packageVersion = "0.0.1";
 
-var publishDir = MakeAbsolute(Directory("publish"));
-var artefactsDir = MakeAbsolute(Directory("artefacts"));
-var testsResultsDir = artefactsDir.Combine("test-results");
-FilePath artefactFilePath;
+var artifactsDir = MakeAbsolute(Directory("artifacts"));
+var packagesDir = artifactsDir.Combine(Directory("packages"));
 
 var solutionPath = "./BeanstalkSeeder.sln";
 
 Task("Clean")
     .Does(() =>
     {
-        CleanDirectory(publishDir);
-        CleanDirectory(artefactsDir);
+        CleanDirectory(artifactsDir);
 
         var settings = new DotNetCoreCleanSettings
         {
@@ -40,10 +35,10 @@ Task("SemVer")
     {
         var gitVersion = GitVersion();
         assemblyVersion = gitVersion.AssemblySemVer;
-        zipVersion = gitVersion.NuGetVersion;
+        packageVersion = gitVersion.NuGetVersion;
 
         Information($"AssemblySemVer: {assemblyVersion}");
-        Information($"Zip version: {zipVersion}");
+        Information($"Zip version: {packageVersion}");
     });
 
 Task("SetAppVeyorVersion")
@@ -51,7 +46,7 @@ Task("SetAppVeyorVersion")
     .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
     .Does(() =>
     {
-        AppVeyor.UpdateBuildVersion(zipVersion);
+        AppVeyor.UpdateBuildVersion(packageVersion);
     });
 
 Task("Build")
@@ -65,8 +60,8 @@ Task("Build")
             NoRestore = true,
             MSBuildSettings = new DotNetCoreMSBuildSettings()
                 .SetVersion(assemblyVersion)
-                .WithProperty("FileVersion", zipVersion)
-                .WithProperty("InformationalVersion", zipVersion)
+                .WithProperty("FileVersion", packageVersion)
+                .WithProperty("InformationalVersion", packageVersion)
                 .WithProperty("nowarn", "7035")
         };
 
@@ -77,65 +72,49 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
     {
-        var settings = new DotNetCoreToolSettings();
-
-        var argumentsBuilder = new ProcessArgumentBuilder()
-            .Append("-configuration")
-            .Append(configuration)
-            .Append("-nobuild");
-
-        var projectFiles = GetFiles("./tests/*/*Tests.csproj");
-
-        foreach (var projectFile in projectFiles)
+        var settings = new DotNetCoreTestSettings
         {
-            var testResultsFile = testsResultsDir.Combine($"{projectFile.GetFilenameWithoutExtension()}.xml");
-            var arguments = $"{argumentsBuilder.Render()} -xml \"{testResultsFile}\"";
+            Configuration = configuration,
+            NoBuild = true
+        };
 
-            DotNetCoreTool(projectFile, "xunit", arguments, settings);
-        }
+        GetFiles("./tests/*/*Tests.csproj")
+            .ToList()
+            .ForEach(f => DotNetCoreTest(f.FullPath, settings));
     });
 
-Task("PublishLocal")
+Task("Pack")
     .IsDependentOn("Test")
-    .WithCriteria(() => HasArgument("publish"))
+    .WithCriteria(() => HasArgument("pack"))
     .Does(() =>
-{
-    var publishPath = publishDir.FullPath + '/';
+    {
+        var settings = new DotNetCorePackSettings
+        {
+            Configuration = configuration,
+            NoBuild = true,
+            NoRestore = true,
+            IncludeSymbols = true,
+            OutputDirectory = packagesDir,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .WithProperty("PackageVersion", packageVersion)
+        };
 
-    var settings = new DotNetCoreMSBuildSettings()
-        .HideLogo()
-        .SetMaxCpuCount(-1)
-        .WithTarget("PublishWithoutBuilding")
-        .SetConfiguration(configuration)
-        .WithProperty("PublishDir", publishPath);
-
-    DotNetCoreMSBuild("./src/BeanstalkSeeder/BeanstalkSeeder.csproj", settings);
-
-    Information($"Published to '{publishPath}'");
-});
-
-Task("Zip")
-    .IsDependentOn("PublishLocal")
-    .WithCriteria(() => HasArgument("publish"))
-    .Does(() =>
-{
-    artefactFilePath = artefactsDir.GetFilePath(new FilePath($"beanstalk-seeder-{zipVersion}.zip"));
-    Zip(publishDir, artefactFilePath);
-
-    Information($"Zipped content of directory '{publishDir}' to archive '{artefactFilePath}'");
-});
+        GetFiles("./src/*/*.csproj")
+            .ToList()
+            .ForEach(f => DotNetCorePack(f.FullPath, settings));
+    });
 
 Task("PublishAppVeyor")
-    .IsDependentOn("Zip")
-    .WithCriteria(() => HasArgument("publish") && AppVeyor.IsRunningOnAppVeyor)
+    .IsDependentOn("Pack")
+    .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
     .Does(() =>
-{
-    CopyFileToDirectory(artefactFilePath, MakeAbsolute(Directory("./")));
+    {
+        CopyFiles($"{packagesDir}/*.nupkg", MakeAbsolute(Directory("./")), false);
 
-    GetFiles($"./*.zip")
+        GetFiles($"./*.nupkg")
             .ToList()
-            .ForEach(f => AppVeyor.UploadArtifact(f, new AppVeyorUploadArtifactsSettings { DeploymentName = "archive" }));
-});
+            .ForEach(f => AppVeyor.UploadArtifact(f, new AppVeyorUploadArtifactsSettings { DeploymentName = "packages" }));
+    });
 
 Task("Default")
     .IsDependentOn("PublishAppVeyor");

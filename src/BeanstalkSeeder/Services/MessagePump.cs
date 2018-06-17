@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Microsoft.Extensions.Logging;
 
 namespace BeanstalkSeeder.Services
@@ -30,7 +31,7 @@ namespace BeanstalkSeeder.Services
             _logger.LogDebug("Using Worker {WorkerEndpoint}", _workerInvoker.Endpoint);
 
             var backoffMillisecond = DefaultBackoffMilliseconds;
-            
+
             while (true)
             {
                 try
@@ -45,31 +46,39 @@ namespace BeanstalkSeeder.Services
 
                     if (message == null)
                     {
-                        _logger.LogInformation("There is no available message in the queue, sleeping for {BackoffMilliseconds} ms", backoffMillisecond);
+                        _logger.LogInformation(
+                            "There is no available message in the queue, sleeping for {BackoffMilliseconds} ms",
+                            backoffMillisecond);
 
                         await _delayer.DelayAsync(backoffMillisecond, token);
-                        
+
                         if (backoffMillisecond < 5000)
                         {
                             backoffMillisecond = (int) Math.Ceiling(backoffMillisecond * 1.2);
                         }
-                        
+
                         continue;
                     }
-                    
+
                     backoffMillisecond = DefaultBackoffMilliseconds;
-                    
+
                     await _workerInvoker.InvokeAsync(message, token);
-                    
+
                     await _queueReader.DeleteAsync(message.ReceiptHandle, token);
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogDebug("A Task was cancelled because cancellation was requested, if this was because the process was exited this error can be ignored safely");
+                    _logger.LogDebug(
+                        "A Task was cancelled because cancellation was requested, if this was because the process was exited this error can be ignored safely");
                 }
                 catch (HttpRequestException ex)
                 {
                     _logger.LogError(new EventId(1), ex, "Error when calling the worker");
+                }
+                catch (AmazonSQSException ex) when ("AWS.SimpleQueueService.NonExistentQueue".Equals(ex.ErrorCode))
+                {
+                    _logger.LogError("The queue {QueueUrl} does not exist", _queueReader.QueueUrl);
+                    break;
                 }
                 catch (Exception ex)
                 {
