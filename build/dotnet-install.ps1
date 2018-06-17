@@ -257,6 +257,7 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
 
     switch ($Version.ToLower()) {
         { $_ -eq "latest" } {
+            return "2.1.300"
             $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel -Coherent $False
             return $LatestVersionInfo.Version
         }

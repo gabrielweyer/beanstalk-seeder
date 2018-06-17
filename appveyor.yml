@@ -84,4 +84,4 @@ install:
   # `BeanstalkSeeder` is targeting `netcoreapp2.1`, so we can safely install the latest `SDK`
   # The `SDK` is required to restore, build, publish... a `.NET Core` application
   # https://www.microsoft.com/net/download/windows
-  - ps: .\build\dotnet-install.ps1 -Channel Current
+  - ps: .\build\dotnet-install.ps1 -Channel LTS
