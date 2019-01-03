@@ -257,7 +257,6 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
 
     switch ($Version.ToLower()) {
         { $_ -eq "latest" } {
-            return "2.1.300"
             $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel -Coherent $False
             return $LatestVersionInfo.Version
         }
@@ -288,7 +287,7 @@ function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [
     Say-Invocation $MyInvocation
 
     if ($SharedRuntime) {
-        $PayloadURL = "https://download.microsoft.com/download/A/1/D/A1D5F1B5-A7B0-432B-A354-FCDC4B059149/dotnet-win-$CLIArchitecture.$SpecificVersion.zip"
+        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/dotnet-win-$CLIArchitecture.$SpecificVersion.zip"
     }
     else {
         $PayloadURL = "$AzureFeed/Sdk/$SpecificVersion/dotnet-dev-win-$CLIArchitecture.$SpecificVersion.zip"
