@@ -15,3 +15,7 @@ tools/*
 # Build
 
 artifacts/
+
+# Visual Studio Code
+
+.vs/
