@@ -10,10 +10,6 @@ obj/
 # Cake
 
 tools/*
-!tools/packages.config
-
-# Build
-
 artifacts/
 
 # Visual Studio Code
